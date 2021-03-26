@@ -1,0 +1,95 @@
+use std::time::{Duration, Instant};
+
+#[derive(Debug)]
+pub struct Bucket {
+    // capacity holds the overall capacity of the bucket.
+    capacity: u64,
+    // availableTokens holds the number of available
+    // tokens as of the associated latestTick.
+    // It will be negative when there are consumers
+    // waiting for tokens.
+    available_tokens: u64,
+    // quantum holds how many tokens are added on
+    // each tick.
+    quantum: u64,
+    // fillInterval holds the interval between each tick.
+    fill_interval: Duration,
+    // latestTick holds the latest tick for which
+    // we know the number of tokens in the bucket.
+    latest_tick: Instant,
+}
+
+impl Bucket {
+    pub fn new(
+        fill_interval: Duration,
+        capacity: u64,
+        quantum: u64,
+        available_tokens: u64,
+    ) -> Self {
+        Self {
+            capacity,
+            available_tokens,
+            latest_tick: Instant::now(),
+            quantum,
+            fill_interval,
+        }
+    }
+
+    fn current_tick(&self) -> f64 {
+        (self.latest_tick.elapsed().as_nanos() as f64) / (self.fill_interval.as_nanos() as f64)
+    }
+
+    fn adjust_available_tokens(&mut self, tick: f64) {
+        self.latest_tick = Instant::now();
+        if self.available_tokens >= self.capacity {
+            return;
+        }
+        self.available_tokens += (tick * self.quantum as f64) as u64;
+        if self.available_tokens >= self.capacity {
+            self.available_tokens = self.capacity;
+        }
+    }
+
+    pub fn take_available(&mut self, count: u64) -> u64 {
+        if count == 0 {
+            return 0;
+        }
+        self.adjust_available_tokens(self.current_tick());
+        if self.available_tokens == 0 {
+            return 0;
+        }
+        if count > self.available_tokens {
+            return self.available_tokens;
+        }
+        self.available_tokens -= count;
+        count
+    }
+
+    pub fn take_one_available(&mut self) -> u64 {
+        self.take_available(1)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::Bucket;
+    use std::thread;
+    use std::time::Duration;
+    #[test]
+    fn it_works() {
+        let mut bucket = Bucket::new(Duration::from_secs(3), 100, 100, 100);
+        let count = bucket.take_available(100);
+        assert_eq!(count, 100);
+        let count = bucket.take_available(100);
+        assert_eq!(count, 0);
+        thread::sleep(Duration::from_secs(3));
+        let count = bucket.take_available(100);
+        assert_eq!(count, 100);
+        thread::sleep(Duration::from_secs(2));
+        let count = bucket.take_available(100);
+        assert_eq!(66, count);
+        thread::sleep(Duration::from_secs(3));
+        let count = bucket.take_available(200);
+        assert_eq!(100, count);
+    }
+}
