@@ -1,4 +1,4 @@
-# ratelimit
+# ratelimit_rs
 
 --
 use ratelimit::Bucket;
