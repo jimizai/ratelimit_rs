@@ -4,6 +4,7 @@ description = "The ratelimit package provides an efficient token bucket implemen
 edition = "2018"
 license = "MIT"
 name = "ratelimit_rs"
+readme = "README.md"
 version = "0.1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
