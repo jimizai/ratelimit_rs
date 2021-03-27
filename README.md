@@ -14,7 +14,7 @@ Bucket represents a token bucket that fills at a predetermined rate. Methods on
 Bucket may be called concurrently.
 
 ```rust
-  let bucket = Bucket::new(fill_interval: Duration, capacity: u64, quantum: u64, available_tokens: u64);
+let bucket = Bucket::new(fill_interval: Duration, capacity: u64, quantum: u64, available_tokens: u64);
 ```
 
 Bucket::new returns a new token bucket that fills at the rate of one token every
@@ -24,7 +24,7 @@ The bucket is initially full.
 #### fn take_available
 
 ```rust
-  bucket.take_available(count: u64) -> u64;
+bucket.take_available(count: u64) -> u64;
 ```
 
 TakeAvailable takes up to count immediately available tokens from the bucket. It
@@ -34,7 +34,7 @@ It does not block.
 #### fn take_max_duration
 
 ```rust
-  bucket.take_max_duration(count: u64, max_wait: Duration) -> (Duration, bool);
+bucket.take_max_duration(count: u64, max_wait: Duration) -> (Duration, bool);
 ```
 
 TakeMaxDuration is take, except that it will only take tokens from the
@@ -47,7 +47,7 @@ wait until the tokens are actually available, and reports true.
 #### fn wait_max_duration
 
 ```rust
-  bucket.wait_max_duration(count: u64, max_wait: Duration) -> bool;
+bucket.wait_max_duration(count: u64, max_wait: Duration) -> bool;
 ```
 
 WaitMaxDuration is like Wait except that it will only take tokens from the
