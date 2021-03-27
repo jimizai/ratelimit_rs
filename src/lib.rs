@@ -39,7 +39,7 @@ impl Bucket {
     }
 
     fn current_tick(&self) -> f64 {
-        (self.latest_tick.elapsed().as_nanos() as f64) / (self.fill_interval.as_nanos() as f64)
+        (self.latest_tick.elapsed().as_millis() as f64) / (self.fill_interval.as_millis() as f64)
     }
 
     fn adjust_available_tokens(&mut self, tick: f64) {
@@ -85,8 +85,8 @@ impl Bucket {
             return (ZERO_TIME, true);
         }
         let end_tick = tick + (((self.quantum as i64) - 1 - avail) as f64) / self.quantum as f64;
-        let wait_time = (self.fill_interval.as_nanos() as f64) * end_tick;
-        if wait_time > max_wait.as_nanos() as f64 {
+        let wait_time = (self.fill_interval.as_millis() as f64) * end_tick;
+        if wait_time > max_wait.as_millis() as f64 {
             return (ZERO_TIME, false);
         }
         self.available_tokens = avail as u64;
