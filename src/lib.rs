@@ -1,4 +1,7 @@
+use std::thread;
 use std::time::{Duration, Instant};
+
+const ZERO_TIME: Duration = Duration::from_secs(0);
 
 #[derive(Debug)]
 pub struct Bucket {
@@ -67,6 +70,36 @@ impl Bucket {
 
     pub fn take_one_available(&mut self) -> u64 {
         self.take_available(1)
+    }
+    // take is the internal version of Take - it takes the current time as
+    // an argument to enable easy testing.
+    fn take(&mut self, count: u64, max_wait: Duration) -> (Duration, bool) {
+        if count == 0 {
+            return (ZERO_TIME, true);
+        }
+        let tick = self.current_tick();
+        self.adjust_available_tokens(tick);
+        let avail = (self.available_tokens as i64) - (count as i64);
+        if avail >= 0 {
+            self.available_tokens = avail as u64;
+            return (ZERO_TIME, true);
+        }
+        let end_tick = tick + (((self.quantum as i64) - 1 - avail) as f64) / self.quantum as f64;
+        let wait_time = (self.fill_interval.as_nanos() as f64) * end_tick;
+        if wait_time > max_wait.as_nanos() as f64 {
+            return (ZERO_TIME, false);
+        }
+        self.available_tokens = avail as u64;
+        (Duration::from_nanos(wait_time as u64), true)
+    }
+
+    pub fn take_max_duration(&mut self, count: u64, max_wait: Duration) -> Duration {
+        let (wait_time, _) = self.take(count, max_wait);
+        wait_time
+    }
+
+    pub fn wait_max_duration(&mut self, count: u64, max_wait: Duration) {
+        thread::sleep(self.take_max_duration(count, max_wait))
     }
 }
 
