@@ -3,23 +3,25 @@ use std::time::{Duration, Instant};
 
 const ZERO_TIME: Duration = Duration::from_secs(0);
 
+/// `Bucket` represents a token bucket that fills at a predetermined rate. Methods on
+/// `Bucket` may be called concurrently.
 #[derive(Debug)]
 pub struct Bucket {
-    // capacity holds the overall capacity of the bucket.
-    capacity: u64,
-    // availableTokens holds the number of available
-    // tokens as of the associated latestTick.
-    // It will be negative when there are consumers
-    // waiting for tokens.
-    available_tokens: u64,
-    // quantum holds how many tokens are added on
-    // each tick.
-    quantum: u64,
-    // fillInterval holds the interval between each tick.
-    fill_interval: Duration,
-    // latestTick holds the latest tick for which
-    // we know the number of tokens in the bucket.
-    latest_tick: Instant,
+    /// capacity holds the overall capacity of the bucket.
+    pub capacity: u64,
+    /// availableTokens holds the number of available
+    /// tokens as of the associated latestTick.
+    /// It will be negative when there are consumers
+    /// waiting for tokens.
+    pub available_tokens: u64,
+    /// quantum holds how many tokens are added on
+    /// each tick.
+    pub quantum: u64,
+    /// fillInterval holds the interval between each tick.
+    pub fill_interval: Duration,
+    /// latestTick holds the latest tick for which
+    /// we know the number of tokens in the bucket.
+    pub latest_tick: Instant,
 }
 
 impl Bucket {
@@ -54,6 +56,9 @@ impl Bucket {
         }
     }
 
+    /// TakeAvailable takes up to count immediately available tokens from the bucket. It
+    /// returns the number of tokens removed, or zero if there are no available tokens.
+    /// It does not block.
     pub fn take_available(&mut self, count: u64) -> u64 {
         if count == 0 {
             return 0;
@@ -69,9 +74,11 @@ impl Bucket {
         count
     }
 
+    /// TakeOneAvailable takes up a token from the bucket.
     pub fn take_one_available(&mut self) -> u64 {
         self.take_available(1)
     }
+
     // take is the internal version of Take - it takes the current time as
     // an argument to enable easy testing.
     fn take(&mut self, count: u64, max_wait: Duration) -> (Duration, bool) {
@@ -93,10 +100,20 @@ impl Bucket {
         (Duration::from_millis(wait_time as u64), true)
     }
 
+    /// TakeMaxDuration is take, except that it will only take tokens from the
+    /// bucket if the wait time for the tokens is no greater than maxWait.
+
+    /// If it would take longer than maxWait for the tokens to become available, it does
+    /// nothing and reports false, otherwise it returns the time that the caller should
+    /// wait until the tokens are actually available, and reports true.
     pub fn take_max_duration(&mut self, count: u64, max_wait: Duration) -> (Duration, bool) {
         self.take(count, max_wait)
     }
 
+    /// WaitMaxDuration is like Wait except that it will only take tokens from the
+    /// bucket if it needs to wait for no greater than maxWait. It reports whether any
+    /// tokens have been removed from the bucket If no tokens have been removed, it
+    /// returns immediately.
     pub fn wait_max_duration(&mut self, count: u64, max_wait: Duration) -> bool {
         let (sleep_time, ok) = self.take(count, max_wait);
         if sleep_time.as_millis() > 0 {
