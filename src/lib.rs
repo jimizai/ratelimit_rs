@@ -90,13 +90,11 @@ impl Bucket {
         if wait_time > max_wait.as_millis() as f64 {
             return (ZERO_TIME, false);
         }
-        self.available_tokens = -avail as u64;
         (Duration::from_millis(wait_time as u64), true)
     }
 
-    pub fn take_max_duration(&mut self, count: u64, max_wait: Duration) -> Duration {
-        let (wait_time, _) = self.take(count, max_wait);
-        wait_time
+    pub fn take_max_duration(&mut self, count: u64, max_wait: Duration) -> (Duration, bool) {
+        self.take(count, max_wait)
     }
 
     pub fn wait_max_duration(&mut self, count: u64, max_wait: Duration) -> bool {
@@ -135,12 +133,15 @@ mod tests {
     fn take_max_duration_works() {
         let mut bucket = Bucket::new(Duration::from_secs(3), 100, 100, 100);
         bucket.take_available(100);
-        let time = bucket.take_max_duration(100, Duration::from_secs(4));
+        let (time, ok) = bucket.take_max_duration(100, Duration::from_secs(4));
         assert_eq!(time.as_millis(), 3000);
-        let time = bucket.take_max_duration(100, Duration::from_secs(1));
+        assert_eq!(ok, true);
+        let (time, ok) = bucket.take_max_duration(100, Duration::from_secs(1));
         assert_eq!(time.as_millis(), 0);
+        assert_eq!(ok, false);
         thread::sleep(Duration::from_secs(1));
-        let time = bucket.take_max_duration(100, Duration::from_secs(7));
+        let (time, ok) = bucket.take_max_duration(100, Duration::from_secs(7));
         assert_eq!(time.as_secs(), 2);
+        assert_eq!(ok, true);
     }
 }
