@@ -1,5 +1,5 @@
 [package]
-authors = ["dyk <359743984@qq.com>"]
+authors = ["jimizai <woshitiancai359@gmail.com>"]
 description = "The ratelimit package provides an efficient token bucket implementation"
 edition = "2018"
 license = "MIT"
