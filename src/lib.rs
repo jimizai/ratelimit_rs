@@ -68,7 +68,9 @@ impl Bucket {
             return 0;
         }
         if count > self.available_tokens {
-            return self.available_tokens;
+            let available_tokens = self.available_tokens;
+            self.available_tokens = 0;
+            return available_tokens;
         }
         self.available_tokens -= count;
         count
@@ -131,7 +133,7 @@ mod tests {
     #[test]
     fn take_avaliable_works() {
         let mut bucket = Bucket::new(Duration::from_secs(3), 100, 100, 100);
-        let count = bucket.take_available(100);
+        let count = bucket.take_available(200);
         assert_eq!(count, 100);
         let count = bucket.take_available(100);
         assert_eq!(count, 0);
