@@ -6,6 +6,8 @@ use ratelimit::Bucket;
 The ratelimit package provides an efficient token bucket implementation. See
 http://en.wikipedia.org/wiki/Token_bucket.
 
+Submit bugs See https://github.com/jimizai/ratelimit_rs/issues. I will deal with it in time.
+
 ## Usage
 
 #### struct Bucket
