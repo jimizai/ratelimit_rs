@@ -67,13 +67,12 @@ impl Bucket {
         if self.available_tokens == 0 {
             return 0;
         }
+        let mut tokens = count;
         if count > self.available_tokens {
-            let available_tokens = self.available_tokens;
-            self.available_tokens = 0;
-            return available_tokens;
+            tokens = self.available_tokens
         }
-        self.available_tokens -= count;
-        count
+        self.available_tokens -= tokens;
+        tokens
     }
 
     /// TakeOneAvailable takes up a token from the bucket.
